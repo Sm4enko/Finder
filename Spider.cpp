@@ -1,4 +1,3 @@
-
 #include "Spider.h"
 #include <boost/locale.hpp>
 #include <boost/regex.hpp>
@@ -15,6 +14,7 @@
 #include <iostream>
 #include <filesystem>
 #include <set>
+#include <map>
 #include <pqxx/pqxx>
 #include "Table.h"
 
@@ -138,7 +138,7 @@ void crawl_page(const std::string& url, const std::vector<std::string>& searchWo
         pqxx::connection conn(data);
         pqxx::work txn(conn);
 
-               txn.exec_params(
+        txn.exec_params(
             "INSERT INTO pages (url) VALUES ($1) ON CONFLICT (url) DO NOTHING",
             url
         );
@@ -146,24 +146,21 @@ void crawl_page(const std::string& url, const std::vector<std::string>& searchWo
         pqxx::result pageResult = txn.exec_params("SELECT id FROM pages WHERE url = $1", url);
         int pageId = pageResult[0][0].as<int>();
 
-        for (const auto& searchWord : searchWords) {
-            auto it = wordFrequency.find(searchWord);
-            if (it != wordFrequency.end()) {
-                pqxx::result wordResult = txn.exec_params("SELECT id FROM words WHERE word = $1", searchWord);
-                int wordId;
-                if (wordResult.empty()) {
-                    wordResult = txn.exec_params("INSERT INTO words (word) VALUES ($1) RETURNING id", searchWord);
-                    wordId = wordResult[0][0].as<int>();
-                } else {
-                    wordId = wordResult[0][0].as<int>();
-                }
-
-                txn.exec_params(
-                    "INSERT INTO word_occurrences (word_id, page_id, frequency) VALUES ($1, $2, $3) "
-                    "ON CONFLICT (word_id, page_id) DO UPDATE SET frequency = EXCLUDED.frequency",
-                    wordId, pageId, it->second
-                );
+        for (const auto& [word, freq] : wordFrequency) {
+            pqxx::result wordResult = txn.exec_params("SELECT id FROM words WHERE word = $1", word);
+            int wordId;
+            if (wordResult.empty()) {
+                wordResult = txn.exec_params("INSERT INTO words (word) VALUES ($1) RETURNING id", word);
+                wordId = wordResult[0][0].as<int>();
+            } else {
+                wordId = wordResult[0][0].as<int>();
             }
+
+            txn.exec_params(
+                "INSERT INTO word_occurrences (word_id, page_id, frequency) VALUES ($1, $2, $3) "
+                "ON CONFLICT (word_id, page_id) DO UPDATE SET frequency = EXCLUDED.frequency",
+                wordId, pageId, freq
+            );
         }
 
         txn.commit();
