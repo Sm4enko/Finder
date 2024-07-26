@@ -2,63 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Страница поиска</title>
+    <title>Search Page</title>
     <style>
+
         body {
-            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
         }
-        .search-wrapper {
+
+        #searchForm {
+            display: none;
+        }
+       
+        #pleaseWait {
+            font-size: 36px; 
+            font-weight: bold;
             text-align: center;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .search-input {
-            padding: 10px;
-            width: 300px;
-            margin-right: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .search-button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .search-button:hover {
-            background-color: #45a049;
-        }
-        .results-wrapper {
-            margin-top: 20px;
-        }
-        #results {
-            text-align: left;
         }
     </style>
 </head>
 <body>
-    <div class="search-wrapper">
-        <h1>Поиск</h1>
-        <form action="http://localhost:8080/search" method="GET">
-            <input type="text" name="query" placeholder="Введите текст для поиска..." class="search-input">
-            <input type="submit" value="Искать" class="search-button">
+    <div>
+        <h1>Search Page</h1>
+        <form id="searchForm" action="/search" method="POST">
+            <input type="text" name="query" id="searchQuery" placeholder="Enter your search words" value="">
+            <button type="submit" id="searchButton">Search</button>
         </form>
-    </div>
-    <div class="results-wrapper">
+        <div id="pleaseWait">Please Wait</div>
         <div id="results">
-            <!-- Результаты поиска будут вставлены сюда -->
+          
         </div>
     </div>
+
+    <script>
+
+        function autoSubmitForm() {
+            var form = document.getElementById('searchForm');
+            var button = document.getElementById('searchButton');
+
+         
+            var event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true
+            });
+
+         
+            button.dispatchEvent(event);
+        }
+
+      
+        window.onload = function() {
+            document.getElementById('pleaseWait').style.display = 'block';
+            autoSubmitForm();
+        };
+    </script>
 </body>
 </html>

@@ -12,9 +12,9 @@ set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_ROOT_DIR}/lib/VC/x64/MTd/libcrypto.lib")
 set(OPENSSL_SSL_LIBRARY "${OPENSSL_ROOT_DIR}/lib/VC/x64/MTd/libssl.lib")
 
 set(PostgreSQL_ADDITIONAL_VERSIONS "16")
-add_subdirectory("D:/Finder/libpqxx-7.9.1" libpqxx-build)
+add_subdirectory("K:/Finder/libpqxx-7.9.1" libpqxx-build)
 
-add_executable(Spider main.cpp Spider.cpp Table.cpp)
+add_executable(Spider main.cpp Spider.cpp Table.cpp http_server.cpp)
 target_compile_features(Spider PRIVATE cxx_std_20)
 
 target_link_libraries(Spider PRIVATE Boost::system Boost::locale ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} pqxx)
