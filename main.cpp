@@ -1,17 +1,10 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <sstream>
-#include <stdexcept>
 #include <unordered_map>
 #include <thread>
-#include <boost/locale.hpp>
-#include <boost/asio.hpp>
-#include <pqxx/pqxx>
-#include <Windows.h>
+#include "http_server.h"
 #include "Table.h"
 #include "Spider.h"
-#include "http_server.h"
 
 int main() {
     std::string data;
@@ -33,13 +26,21 @@ int main() {
         std::cout << "Username: " << username << std::endl;
         std::cout << "StartPage: " << startPage << std::endl;
         std::cout << "RecursionDepth: " << recursionDepth << std::endl;
+
+     
+        std::thread server_thread(start_http_server);
+        server_thread.detach();
+
+   
+        crawl_page(startPage, {}, recursionDepth, data);
+
+      
+        std::this_thread::sleep_for(std::chrono::minutes(10));
+
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
-    std::cout << "Welcome http://localhost:8080";
-    std::thread server_thread(start_http_server);
-    server_thread.join();
 
     return 0;
 }
