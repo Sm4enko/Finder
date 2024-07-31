@@ -1,15 +1,26 @@
 #include <iostream>
 #include <string>
+#include <vector>
+#include <sstream>
+#include <stdexcept>
 #include <unordered_map>
 #include <thread>
-#include "http_server.h"
+#include <boost/locale.hpp>
+#include <boost/asio.hpp>
+#include <pqxx/pqxx>
+#include <Windows.h>
 #include "Table.h"
 #include "Spider.h"
+#include "http_server.h"
+
+void run_server() {
+    start_http_server();
+}
 
 int main() {
     std::string data;
     try {
-        std::unordered_map<std::string, std::string> settings = readConfig("K:/Finder/config.ini");
+        std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/config.ini");
         std::string host = settings["Host"];
         int port = std::stoi(settings["Port"]);
         std::string database = settings["Database"];
@@ -26,20 +37,20 @@ int main() {
         std::cout << "Username: " << username << std::endl;
         std::cout << "StartPage: " << startPage << std::endl;
         std::cout << "RecursionDepth: " << recursionDepth << std::endl;
-
-     
-        std::thread server_thread(start_http_server);
-        server_thread.detach();
-
-   
-        crawl_page(startPage, {}, recursionDepth, data);
-
-      
-        std::this_thread::sleep_for(std::chrono::minutes(10));
-
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return 1;
+    }
+
+    std::thread server_thread(run_server);
+    server_thread.detach(); 
+
+    std::cout << "Welcome http://localhost:8080" << std::endl;
+
+
+    while (true) {
+   
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     return 0;

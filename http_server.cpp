@@ -5,7 +5,6 @@
 #include <sstream>
 #include <fstream>
 #include <unordered_map>
-#include <thread>
 #include <boost/locale.hpp>
 #include <boost/asio.hpp>
 #include <pqxx/pqxx>
@@ -15,12 +14,23 @@
 
 using boost::asio::ip::tcp;
 
+std::vector<std::string> parse_search_query(const std::string& query) {
+    std::vector<std::string> searchWords;
+    std::istringstream iss(query);
+    std::string word;
+    while (iss >> word) {
+        searchWords.push_back(word);
+    }
+    std::sort(searchWords.begin(), searchWords.end());
+    return searchWords;
+}
+
 std::string make_response(const std::string& request) {
     std::string response;
 
     if (request.find("GET / ") != std::string::npos) {
    
-        std::ifstream file("K:/Finder/index.html");
+        std::ifstream file("D:/Finder/index.html");
         if (file) {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n" + content;
@@ -28,7 +38,7 @@ std::string make_response(const std::string& request) {
             response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nFile not found!";
         }
     } else if (request.find("POST /search") == 0) {
-     
+   
         size_t content_start = request.find("\r\n\r\n");
         std::string body = request.substr(content_start + 4);
 
@@ -45,15 +55,10 @@ std::string make_response(const std::string& request) {
         }
 
         std::string query = form_data["query"];
-        std::vector<std::string> searchWords;
-        std::istringstream iss(query);
-        std::string word;
-        while (iss >> word) {
-            searchWords.push_back(word);
-        }
+        std::vector<std::string> searchWords = parse_search_query(query);
 
         std::string data;
-        std::unordered_map<std::string, std::string> settings = readConfig("K:/Finder/config.ini");
+        std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/config.ini");
         std::string host = settings["Host"];
         int port = std::stoi(settings["Port"]);
         std::string database = settings["Database"];
@@ -64,6 +69,7 @@ std::string make_response(const std::string& request) {
         create_table();
         crawl_page(settings["StartPage"], searchWords, std::stoi(settings["RecursionDepth"]), data);
 
+     
         std::string result_html = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Search Results</title></head><body>";
         result_html += "<h1>Search Results</h1>";
         result_html += "<form action=\"/search\" method=\"POST\">";

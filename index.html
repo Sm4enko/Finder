@@ -4,42 +4,30 @@
     <meta charset="UTF-8">
     <title>Search Page</title>
     <style>
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
+    
         #searchForm {
-            display: none;
+            display: block;
         }
-       
+  
         #pleaseWait {
-            font-size: 36px; 
+            font-size: 18px;
             font-weight: bold;
-            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div>
-        <h1>Search Page</h1>
-        <form id="searchForm" action="/search" method="POST">
-            <input type="text" name="query" id="searchQuery" placeholder="Enter your search words" value="">
-            <button type="submit" id="searchButton">Search</button>
-        </form>
-        <div id="pleaseWait">Please Wait</div>
-        <div id="results">
-          
-        </div>
+    <h1>Search Page</h1>
+    <form id="searchForm" action="/search" method="POST">
+        <input type="text" name="query" id="searchQuery" placeholder="Enter your search words" value="">
+        <button type="submit" id="searchButton">Search</button>
+    </form>
+    <div id="pleaseWait" style="display: none;">Please Wait</div>
+    <div id="results">
+        <!-- Results will be displayed here -->
     </div>
 
     <script>
-
+     
         function autoSubmitForm() {
             var form = document.getElementById('searchForm');
             var button = document.getElementById('searchButton');
@@ -51,11 +39,11 @@
                 cancelable: true
             });
 
-         
+
             button.dispatchEvent(event);
         }
 
-      
+
         window.onload = function() {
             document.getElementById('pleaseWait').style.display = 'block';
             autoSubmitForm();
