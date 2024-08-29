@@ -19,6 +19,7 @@ void run_server() {
 
 int main() {
     std::string data;
+    setlocale(LC_ALL, "Russian");
     try {
         std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/config.ini");
         std::string host = settings["Host"];
@@ -37,19 +38,21 @@ int main() {
         std::cout << "Username: " << username << std::endl;
         std::cout << "StartPage: " << startPage << std::endl;
         std::cout << "RecursionDepth: " << recursionDepth << std::endl;
-    } catch (const std::exception& e) {
+        std::cout << "Проверка локали.. "  << std::endl;
+    }
+    catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
 
     std::thread server_thread(run_server);
-    server_thread.detach(); 
+    server_thread.detach();
 
     std::cout << "Welcome http://localhost:8080" << std::endl;
 
 
     while (true) {
-   
+
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 

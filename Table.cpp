@@ -8,21 +8,22 @@
 
 std::string New;
 
-void mySettings(const std::string mySettings) {
+void mySettings(const std::string  mySettings) {
     New = mySettings;
 }
-std::unordered_map<std::string, std::string> readConfig(const std::string& filename) {
-    std::unordered_map<std::string, std::string> settings;
-    std::ifstream file(filename);
+std::unordered_map<std::string, std::string > readConfig(const std::string& filename) {
+    std::unordered_map<std::string, std::string > settings;
+    std::fstream file(filename);
+ 
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open " + filename);
     }
-    std::string line;
+    std::string  line;
     while (std::getline(file, line)) {
         size_t delimiterPos = line.find('=');
-        if (delimiterPos != std::string::npos) {
-            std::string key = line.substr(0, delimiterPos);
-            std::string value = line.substr(delimiterPos + 1);
+        if (delimiterPos != std::wstring::npos) {
+            std::string  key = line.substr(0, delimiterPos);
+            std::string  value = line.substr(delimiterPos + 1);
             key.erase(0, key.find_first_not_of(' '));
             key.erase(key.find_last_not_of(' ') + 1);
             value.erase(0, value.find_first_not_of(' '));
@@ -44,6 +45,7 @@ std::string getConnectionString() {
 
 void create_table() {
     try {
+
         pqxx::connection conn(getConnectionString());
         pqxx::work txn(conn);
         txn.exec("CREATE TABLE IF NOT EXISTS words (id SERIAL PRIMARY KEY, word TEXT UNIQUE)");
@@ -57,7 +59,7 @@ void create_table() {
 }
 
 void retrieve_data() {
-    try {
+    try {;
         pqxx::connection conn(getConnectionString());
         pqxx::work txn(conn);
         pqxx::result result = txn.exec(
