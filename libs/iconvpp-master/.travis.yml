@@ -1,0 +1,12 @@
+language: cpp
+
+compiler:
+  - gcc
+
+before_install:
+  - pip install cpplint --user
+
+script:
+  - ./waf configure
+  - ./waf --checkall
+  - ./waf cpplint

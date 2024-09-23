@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="Windows-1251" >
+    <title>Search Page</title>
+    <style>
+    
+        #searchForm {
+            display: block;
+        }
+  
+        #pleaseWait {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Page</h1>
+    <form id="searchForm" action="/search" method="POST" enctype="multipart/form-data" accept-charset="UTF-8 Windows-1251" >
+        <input type="text" name="query" id="searchQuery" placeholder="Enter your search words" value="">
+        <button type="submit" id="searchButton">Search</button>
+    </form>
+    <div id="pleaseWait" style="display: none;">Please Wait</div>
+    <div id="results">
+        <!-- Results will be displayed here -->
+    </div>
+
+<script>
+async function SendForm(e){
+    e.preventDefault();
+    const myForm = document.getElementById('searchForm'); // получаем форму по ее id
+    document.getElementById('pleaseWait').style.display = "block"; // получаем форму по ее id
+    myForm.submit(); // отправляем форму
+    };
+searchForm.onsubmit = SendForm;
+</script>
+</body>
+</html>
