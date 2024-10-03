@@ -13,16 +13,22 @@
 #include "Table.h"
 #include <mutex>
 #include <include/iconv.h>
+#include <boost/regex.hpp>
 
-using namespace std::this_thread; // sleep_for, sleep_until
-using namespace std::chrono; // nanoseconds, system_clock, seconds
+using namespace std::this_thread; 
+using namespace std::chrono; 
 using boost::asio::ip::tcp;
-std::mutex g_lock1;
 
-std::vector<std::string> parse_search_query(const std::string& query) {
+std::mutex g_lock1;
+int threadNumber = -1;
+std::string con_data;
+
+std::vector<std::string> parse_search_query(std::string& query) {
 	size_t start;
 	size_t end = 0;
 	std::vector<std::string> searchWords;
+	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); 
+	query = boost::regex_replace(query, spec, "");
 	while ((start = query.find_first_not_of(" ", end)) != std::string::npos)
 	{
 		end = query.find(" ", start);
@@ -31,33 +37,24 @@ std::vector<std::string> parse_search_query(const std::string& query) {
 	return searchWords;
 }
 
-std::unordered_map<std::string, std::string> settings;
 std::string make_response(const std::string request) {
 	std::string response;
 	std::string query = request;
 	std::vector<std::string> searchWords =  parse_search_query(query);
-	std::string data;
-	std::string host = settings["Host"];
-	int port = std::stoi(settings["Port"]);
-	std::string database = settings["Database"];
-	std::string username = settings["Username"];
-	std::string password = settings["Password"];
-	data += "dbname=" + database + " user=" + username + " password=" + password + " host=" + host + " port=" + std::to_string(port);
-	create_table();
-	std::string result_html = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"Windows-1251\"><title>Search Results</title></head><body>";
+
+	std::string result_html = "<!DOCTYPE html><html lang=\"ru\"><head><meta charset=\"Windows-1251\"><title>Search Results</title></head><body>";
 	result_html += "<h1>Search Results</h1>";
-	result_html += "<form action=\"/search\" method=\"POST\">";
-	result_html += "<input type=\"text\" name=\"query\" value=\"" + query + "\">";
+	result_html += "<form action=\"/search\" method=\"POST\" enctype=\"multipart/form-data\" accept-charset=\"UTF-8 Windows-1251\">";
+	result_html += "<input type=\"text\" name=\"query\" id=\"searchQuery\" value=\"" + query + "\">";
 	result_html += "<button type=\"submit\">Search</button>";
 	result_html += "</form>";
 	result_html += "<div id=\"results\">";
 
-	pqxx::connection conn(data);
+	pqxx::connection conn(con_data);
 	pqxx::work txn(conn);
 	std::string queryPG = "SELECT SUM(wo.frequency) AS sm, p.url, string_agg(w.word, ', ') AS st FROM word_occurrences wo JOIN words w ON wo.word_id = w.id JOIN pages p ON wo.page_id = p.id WHERE w.word = '";
 	for (auto word : searchWords) {
 		queryPG += word;
-		
 		if (word != searchWords[searchWords.size()-1]) {
 			queryPG += "' OR w.word = '";
 		}
@@ -78,12 +75,10 @@ std::string make_response(const std::string request) {
 		}
 		result_html += "</table>";
 	}
-	result_html += "</div></body></html>";
+	result_html += "</div><script>async function SendForm(e) {e.preventDefault();const myForm = document.getElementById('searchForm');document.getElementById('pleaseWait').style.display = 'block';myForm.submit();};searchForm.onsubmit = SendForm;</script></body></html>";	
 	response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=Windows-1251\r\n\r\n" + result_html;
 	return response;
 }
-int threadNumber = -1;
-
 
 char* convert(const char* s, const char* from_cp, const char* to_cp)
 {
@@ -116,7 +111,6 @@ void handle_request(tcp::socket &socket) {
 	g_lock1.lock();
 	std::cout << out_str;
 	g_lock1.unlock();
-
 	boost::asio::streambuf buffer;
 	boost::system::error_code error;
 	boost::asio::read_until(socket, buffer, "\r\n\r\n", error);
@@ -172,7 +166,7 @@ void handle_request(tcp::socket &socket) {
 
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
 boost::asio::io_service service;
-tcp::endpoint ep(tcp::v4(), 8080); // listen on 2001
+tcp::endpoint ep(tcp::v4(), 8080); 
 tcp::acceptor acc(service, ep);
 
 void handle_accept(boost::shared_ptr<tcp::socket> sock, const boost::system::error_code& err)
@@ -188,8 +182,8 @@ void start_accept(boost::shared_ptr<tcp::socket> sock)
 	acc.async_accept(*sock, boost::bind(handle_accept, sock, std::placeholders::_1));
 }
 
-void start_http_server() {
-	settings = readConfig("D:/Finder/C++/SearchMachine/config.ini");
+void start_http_server(std::string &dt) {
+	con_data = dt;
 	socket_ptr sock(new tcp::socket(service));
 	start_accept(sock);
 	service.run();

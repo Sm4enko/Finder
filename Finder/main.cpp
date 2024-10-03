@@ -12,32 +12,28 @@
 #include "Table.h"
 #include "http_server.h"
 
+std::unordered_map<std::string, std::string> sets;
+std::string data="";
 void run_server() {
-    start_http_server();
+    start_http_server(data);
 }
 
-int main() {
-    std::string data;
+int main() {   
     setlocale(LC_ALL, "Russian");
     try {
-        std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/C++/SearchMachine/config.ini");
-        std::string host = settings["Host"];
-        int port = std::stoi(settings["Port"]);
-        std::string database = settings["Database"];
-        std::string username = settings["Username"];
-        std::string password = settings["Password"];
-        std::string startPage = settings["StartPage"];
-        int recursionDepth = std::stoi(settings["RecursionDepth"]);
-        data += "dbname=" + database + " user=" + username + " password=" + password + " host=" + host + " port=" + std::to_string(port);
-        mySettings(data);
+        sets = readConfig("D:/Finder/C++/SearchMachine/config.ini");
         std::cout << "Settings loaded successfully:" << std::endl;
-        std::cout << "Host: " << host << std::endl;
-        std::cout << "Port: " << port << std::endl;
-        std::cout << "Database: " << database << std::endl;
-        std::cout << "Username: " << username << std::endl;
-        std::cout << "StartPage: " << startPage << std::endl;
-        std::cout << "RecursionDepth: " << recursionDepth << std::endl;
+        std::cout << "Host: " << sets["Host"] << std::endl;
+        std::cout << "Port: " << sets["Port"] << std::endl;
+        std::cout << "Database: " << sets["Database"] << std::endl;
+        std::cout << "Username: " << sets["Username"] << std::endl;
+        std::cout << "Username: " << sets["Password"] << std::endl;
+        std::cout << "StartPage: " << sets["StartPage"] << std::endl;
+        std::cout << "RecursionDepth: " << sets["RecursionDepth"] << std::endl;
         std::cout << "Проверка локали.. "  << std::endl;
+        data += "dbname=" + sets["Database"] + " user=" + sets["Username"] + " password=" + sets["Password"] + " host=" + sets["Host"] + " port=" + sets["Port"];
+        mySettings(data);
+        create_table();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
@@ -49,7 +45,6 @@ int main() {
     std::cout << "Welcome http://localhost:8080" << std::endl;
 
     while (true) {
-
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 

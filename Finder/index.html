@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="Windows-1251" >
     <title>Search Page</title>
     <style>
-    
         #searchForm {
             display: block;
         }
-  
         #pleaseWait {
             font-size: 18px;
             font-weight: bold;
@@ -29,9 +27,9 @@
 <script>
 async function SendForm(e){
     e.preventDefault();
-    const myForm = document.getElementById('searchForm'); // получаем форму по ее id
-    document.getElementById('pleaseWait').style.display = "block"; // получаем форму по ее id
-    myForm.submit(); // отправляем форму
+    const myForm = document.getElementById('searchForm'); 
+    document.getElementById('pleaseWait').style.display = "block"; 
+    myForm.submit(); 
     };
 searchForm.onsubmit = SendForm;
 </script>
