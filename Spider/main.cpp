@@ -12,8 +12,6 @@
 #include <Windows.h>
 #include "Table.h"
 #include "Spider.h"
-#include "Spider.cpp"
-
 
 void main() {
 	std::string data;
@@ -46,11 +44,12 @@ void main() {
 	create_table();
 
 	Spider spider;
+
 	spider.guard.addThread(std::thread([&spider, &startPage, &recursionDepth, &data] {
 			spider.crawl_page(startPage, recursionDepth, data, 0); 
 		}),startPage);
 	spider.guard.runTask(spider.ids);
-	spider.guard.stop(); // Останавливаем функцию runTask
-	std::cout << "Сканирование дерева сайтов завершено" << std::endl;
+	spider.guard.stop(); //  останавливаем функцию runTask
+	std::cout << "Склонирование дерева сайтов завершено" << std::endl;
 	exit(0);
 }

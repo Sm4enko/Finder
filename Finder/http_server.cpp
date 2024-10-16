@@ -15,8 +15,8 @@
 #include <include/iconv.h>
 #include <boost/regex.hpp>
 
-using namespace std::this_thread; 
-using namespace std::chrono; 
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
 using boost::asio::ip::tcp;
 
 std::mutex g_lock1;
@@ -27,7 +27,7 @@ std::vector<std::string> parse_search_query(std::string& query) {
 	size_t start;
 	size_t end = 0;
 	std::vector<std::string> searchWords;
-	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); 
+	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); // удалим из запроса символы, которых точно нет в базе
 	query = boost::regex_replace(query, spec, "");
 	while ((start = query.find_first_not_of(" ", end)) != std::string::npos)
 	{
@@ -166,7 +166,7 @@ void handle_request(tcp::socket &socket) {
 
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
 boost::asio::io_service service;
-tcp::endpoint ep(tcp::v4(), 8080); 
+tcp::endpoint ep(tcp::v4(), 8080); // listen on 2001
 tcp::acceptor acc(service, ep);
 
 void handle_accept(boost::shared_ptr<tcp::socket> sock, const boost::system::error_code& err)

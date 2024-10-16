@@ -1,10 +1,8 @@
-
 #include "Table.h"
 #include <pqxx/pqxx>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
-
 
 std::string New;
 

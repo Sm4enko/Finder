@@ -41,7 +41,7 @@ std::string make_response(const std::string request) {
 	std::vector<std::string> searchWords =  parse_search_query(query);
 
 	std::string data;
-	std::unordered_map<std::string, std::string> settings = readConfig("D:/Fider/C++/Finder/config.ini");
+	std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/C++/Finder/config.ini");
 	std::string host = settings["Host"];
 	int port = std::stoi(settings["Port"]);
 	std::string database = settings["Database"];
