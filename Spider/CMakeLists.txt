@@ -1,37 +1,27 @@
 cmake_minimum_required(VERSION 3.20)
 project(Spider)
-#add_definitions( -DBOOST_ALL_DYN_LINK )
-#set(Boost_USE_RELEASE_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)  
-#set(Boost_USE_STATIC_RUNTIME OFF) 
 set(Boost_USE_STATIC_LIBS ON)
-set(BOOST_ROOT "E:/boost")
+set(BOOST_ROOT "C:/boost")
 
 find_package(Boost REQUIRED COMPONENTS system locale thread)
 if(Boost_FOUND)
 	 message("${Boost_LIBRARY_DIRS} is found")
 endif()
-
-
-set(OPENSSL_ROOT_DIR "C:/Program Files/OpenSSL-Win64")
 set(OPENSSL_USE_STATIC_LIBS TRUE)
+set(OPENSSL_ROOT_DIR "C:/Program Files/OpenSSL-Win64")
 set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
 set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_ROOT_DIR}/lib/VC/x64/MTd/libcrypto.lib")
 set(OPENSSL_SSL_LIBRARY "${OPENSSL_ROOT_DIR}/lib/VC/x64/MTd/libssl.lib")
-set(LIBCONV_LIBRARY "D:/Finder/C++/SearchMachine/libs/iconvpp-master/libiconv/libiconvStatic.lib")
+set(LIBCONV_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../libs/libiconv/libiconvStatic.lib")
 set(PostgreSQL_ADDITIONAL_VERSIONS "16")
-add_subdirectory("D:/Finder/C++/SearchMachine/libs/libpqxx-7.9.1" libpqxx-build)
-add_executable(Spider main.cpp Spider.cpp Table.cpp)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/libpqxx-7.9.1" libpqxx-build)
+
+add_executable(Spider main.cpp Spider.cpp Table.cpp )
+
 target_compile_features(Spider PRIVATE cxx_std_20)
-target_link_libraries(Spider PRIVATE Boost::system Boost::locale Boost::thread ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} ${LIBCONV_LIBRARY} ${KERNEL32_LIBRARY} pqxx kernel32 psapi)
+target_link_libraries(Spider PRIVATE Boost::system Boost::locale Boost::thread ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} ${LIBCONV_LIBRARY} pqxx)
 
-
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${OPENSSL_INCLUDE_DIR})
-include_directories(${OPENSSL_INCLUDE_DIR})
-include_directories(${BOOST_LIBRARYDIR})
-include_directories("D:/Finder/C++/SearchMachine/include")
-include_directories("D:/Finder/C++/SearchMachine/libiconv")
+include_directories("${OPENSSL_INCLUDE_DIR}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../libs/libiconv")

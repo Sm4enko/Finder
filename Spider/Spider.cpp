@@ -28,8 +28,8 @@
 
 using namespace boost::beast;
 using namespace boost::asio;
-using namespace std::this_thread; 
-using namespace std::chrono; 
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -46,34 +46,34 @@ using tcp = net::ip::tcp;
 
 Spider::Spider() { running_ = true; }
 Spider::ThreadGuard::ThreadGuard() { stop_ = false; }
-void Spider::ThreadGuard::addThread(std::thread&& thread, const std::string& url) { 
-	std::lock_guard<std::mutex> lock(mtx_); 
-	threads_.push_back(std::move(thread)); 
+void Spider::ThreadGuard::addThread(std::thread&& thread, const std::string& url) { // Добавление потока в вектор
+	std::lock_guard<std::mutex> lock(mtx_); // Устанавливаем блокировку для защиты вектора от одновременного доступа нескольких потоков
+	threads_.push_back(std::move(thread)); // Добавляем поток в вектор
 }
 
 void Spider::ThreadGuard::checkState(std::vector<std::thread::id>& ids) {
 	if (ids.size() == threads_.size()) {
-		stop_ = true; 
+		stop_ = true; // Устанавливаем флаг остановки
 	}
 }
 
-void Spider::ThreadGuard::runTask(std::vector<std::thread::id>& ids) { 
+void Spider::ThreadGuard::runTask(std::vector<std::thread::id>& ids) { // Функция для запуска задачи
 	sleep_for(std::chrono::milliseconds(10000));
 	while (true) {
 		{
-			std::lock_guard<std::mutex> lock(mtx_); 
-			if (threads_.empty() || stop_) { 
-				break; 
+			std::lock_guard<std::mutex> lock(mtx_); // Устанавливаем блокировку для защиты вектора от одновременного доступа нескольких потоков
+			if (threads_.empty() || stop_) { // Проверяем, пуст ли вектор или установлен флаг остановки
+				break; // Если да, то завершаем функцию
 			}
 		}
 		checkState(ids);
-		std::this_thread::sleep_for(std::chrono::milliseconds(100)); 
+		std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Задержка для экономии ресурсов
 	}
 }
 
-void Spider::ThreadGuard::stop() { 
-	std::lock_guard<std::mutex> lock(mtx_); 
-	stop_ = true;
+void Spider::ThreadGuard::stop() { // Функция для остановки функции runTask
+	std::lock_guard<std::mutex> lock(mtx_); // Устанавливаем блокировку для защиты вектора от одновременного доступа нескольких потоков
+	stop_ = true; // Устанавливаем флаг остановки
 }
 
 
@@ -391,7 +391,7 @@ std::string Spider::remove_html_tags(const std::string& input) {
 	std::string output;
 	boost::regex td("((<td.*?>)|(<th.*?>)|(<li.*?>)|<br>|</td>|</li>|<p.*?>|PNG \x1a)");
 	boost::regex styles("(<style.*?</style>)");
-	boost::regex tags("<*?>");// "(<[^>]*)>" "<[^>]+>"
+	boost::regex tags("\<.*?\>");// "(<[^>]*)>" "<[^>]+>"
 	boost::regex head("(<head.*?</head>)");
 	boost::regex scripts("(<script.*?</script>)");
 	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]");

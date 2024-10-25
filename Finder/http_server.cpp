@@ -129,7 +129,7 @@ void handle_request(tcp::socket &socket) {
 	std::string response;
 	if (request.find("GET /") != std::string::npos) {
 		std::cout << " Request Type GET " << "\n";
-		std::ifstream file("D:/Finder/C++/SearchMachine/Finder/index.html");
+		std::ifstream file("C:/SearchMachine/Finder/index.html");
 		if (file) {
 			std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 			response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=Windows-1251\r\n\r\n" + content;

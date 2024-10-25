@@ -21,7 +21,7 @@ void main() {
 	std::locale loc = gen("Russian_Russia.1251");
 	std::locale::global(loc);*/
 	
-	std::unordered_map<std::string, std::string> settings = readConfig("D:/Finder/C++/SearchMachine/config.ini");
+	std::unordered_map<std::string, std::string> settings = readConfig("C:/SearchMachine/config.ini");
 	std::string host = settings["Host"];
 	int port = std::stoi(settings["Port"]);
 	std::string database = settings["Database"];

@@ -21,7 +21,7 @@ void run_server() {
 int main() {   
     setlocale(LC_ALL, "Russian");
     try {
-        sets = readConfig("D:/Finder/C++/SearchMachine/config.ini");
+        sets = readConfig("C:/SearchMachine/config.ini");
         std::cout << "Settings loaded successfully:" << std::endl;
         std::cout << "Host: " << sets["Host"] << std::endl;
         std::cout << "Port: " << sets["Port"] << std::endl;
