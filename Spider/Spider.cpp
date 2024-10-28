@@ -251,47 +251,55 @@ void Spider::crawl_page(const std::string url, int depth, std::string data, bool
 			}
 			++wordFrequency[word];
 		}
-		try {
-			pqxx::connection conn(data);
-			pqxx::work txn(conn);
-			txn.exec_params(
-				"INSERT INTO pages (url) VALUES ($1) ON CONFLICT (url) DO NOTHING",
-				url
-			);
-			pqxx::result pageResult = txn.exec_params("SELECT id FROM pages WHERE url = $1", url);
-			int pageId = pageResult[0][0].as<int>();
-			for (const auto& wordFrequencyItem : wordFrequency) {
+
+		pqxx::connection conn(data);
+		pqxx::work txn(conn);
+		txn.exec_params(
+			"INSERT INTO pages (url) VALUES ($1) ON CONFLICT (url) DO NOTHING",
+			url
+		);
+		pqxx::result pageResult = txn.exec_params("SELECT id FROM pages WHERE url = $1", url);
+
+		txn.commit();
+		int pageId = pageResult[0][0].as<int>();
+		for (const auto& wordFrequencyItem : wordFrequency) {
+			try 
+			{
+				pqxx::work txn2(conn);
 				std::string searchWord = wordFrequencyItem.first;
 				if (searchWord.find("Search") != std::string::npos) {
 					printMsg("");
 				}
 				std::string q = "SELECT id FROM words WHERE word = '" + searchWord + "'";
-				pqxx::result wordResult = txn.exec(q);
+				pqxx::result wordResult = txn2.exec(q);
 				int wordId;
 				if (wordResult.empty()) {
 					//q = "INSERT INTO words (word) VALUES ('" +searchWord + "') RETURNING id";
-					wordResult = txn.exec_params("INSERT INTO words (word) VALUES ($1) RETURNING id",searchWord);
+					wordResult = txn2.exec_params("INSERT INTO words (word) VALUES ($1) RETURNING id", searchWord);
 					wordId = wordResult[0][0].as<int>();
 				}
 				else {
 					wordId = wordResult[0][0].as<int>();
 				}
-				txn.exec_params(
+				txn2.exec_params(
 					"INSERT INTO word_occurrences (word_id, page_id, frequency) VALUES ($1, $2, $3) "
 					"ON CONFLICT (word_id, page_id) DO UPDATE SET frequency = EXCLUDED.frequency",
 					wordId, pageId, wordFrequencyItem.second
 				);
+
+				txn2.commit();
+
 			}
-			txn.commit();
-			conn.close();
+			catch (const std::exception& e) {
+				out_str = "Stop (SQL Error) thread# " + threadId + " in url " + url + "\n";
+				printMsg(e.what());
+				printMsg(out_str);
+				printMsg("Error happened, ignoring this word...");
+			}
 		}
-		catch (const std::exception& e) {
-			out_str = "Stop (SQL Error) thread# " + threadId + " in url " + url + "\n";
-			printMsg(out_str);
-			std::lock_guard<std::mutex> lock(ids_lock);
-			ids.emplace_back(threadIdNum);
-			return;
-		}
+	
+		conn.close();
+
 
 		if (depth == 1) {
 			out_str = "Stop normally (depth 1, db complete) thread# " + threadId + " in url " + url + "\n";
@@ -355,13 +363,13 @@ void Spider::crawl_page(const std::string url, int depth, std::string data, bool
 		for (const auto& url : child_urls) {
 			guard.addThread(std::thread([this, &url, &depth, &data, &threadIdNum] {
 				try {
-				crawl_page(url, depth - 1, data, 1);
-			}
-			catch (...) {
-				std::lock_guard<std::mutex> lock(ids_lock);
-				ids.emplace_back(threadIdNum);
-				return;
-			}
+					crawl_page(url, depth - 1, data, 1);
+				}
+				catch (...) {
+					std::lock_guard<std::mutex> lock(ids_lock);
+					ids.emplace_back(threadIdNum);
+					return;
+				}
 				}), url);
 		}
 		io_context.run();

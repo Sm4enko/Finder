@@ -1,4 +1,4 @@
-#include "http_server.h"
+п»ї#include "http_server.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@ std::vector<std::string> parse_search_query(std::string& query) {
 	size_t start;
 	size_t end = 0;
 	std::vector<std::string> searchWords;
-	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); // удалим из запроса символы, которых точно нет в базе
+	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); // ГіГ¤Г Г«ГЁГ¬ ГЁГ§ Г§Г ГЇГ°Г®Г±Г  Г±ГЁГ¬ГўГ®Г«Г», ГЄГ®ГІГ®Г°Г»Гµ ГІГ®Г·Г­Г® Г­ГҐГІ Гў ГЎГ Г§ГҐ
 	query = boost::regex_replace(query, spec, "");
 	while ((start = query.find_first_not_of(" ", end)) != std::string::npos)
 	{
@@ -40,7 +40,7 @@ std::vector<std::string> parse_search_query(std::string& query) {
 std::string make_response(const std::string request) {
 	std::string response;
 	std::string query = request;
-	std::vector<std::string> searchWords =  parse_search_query(query);
+	std::vector<std::string> searchWords = parse_search_query(query);
 
 	std::string result_html = "<!DOCTYPE html><html lang=\"ru\"><head><meta charset=\"Windows-1251\"><title>Search Results</title></head><body>";
 	result_html += "<h1>Search Results</h1>";
@@ -55,7 +55,7 @@ std::string make_response(const std::string request) {
 	std::string queryPG = "SELECT SUM(wo.frequency) AS sm, p.url, string_agg(w.word, ', ') AS st FROM word_occurrences wo JOIN words w ON wo.word_id = w.id JOIN pages p ON wo.page_id = p.id WHERE w.word = '";
 	for (auto word : searchWords) {
 		queryPG += word;
-		if (word != searchWords[searchWords.size()-1]) {
+		if (word != searchWords[searchWords.size() - 1]) {
 			queryPG += "' OR w.word = '";
 		}
 	}
@@ -75,10 +75,18 @@ std::string make_response(const std::string request) {
 		}
 		result_html += "</table>";
 	}
-	result_html += "</div><script>async function SendForm(e) {e.preventDefault();const myForm = document.getElementById('searchForm');document.getElementById('pleaseWait').style.display = 'block';myForm.submit();};searchForm.onsubmit = SendForm;</script></body></html>";	
-	response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=Windows-1251\r\n\r\n" + result_html;
+	result_html += "</div><script>async function SendForm(e) {e.preventDefault();const myForm = document.getElementById('searchForm');document.getElementById('pleaseWait').style.display = 'block';myForm.submit();};searchForm.onsubmit = SendForm;</script></body></html>";
+
+	std::string content_length = std::to_string(result_html.length());
+
+	response = "HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/html; charset=Windows-1251\r\n"
+		"Content-Length: " + content_length + "\r\n"
+		"Connection: close\r\n\r\n" + result_html;
+
 	return response;
 }
+
 
 char* convert(const char* s, const char* from_cp, const char* to_cp)
 {
@@ -104,7 +112,7 @@ char* convert(const char* s, const char* from_cp, const char* to_cp)
 	return out_buf;
 }
 
-void handle_request(tcp::socket &socket) {
+void handle_request(tcp::socket& socket) {
 	threadNumber++;
 	std::string out_str;
 	out_str = "New request thread# " + std::to_string(threadNumber) + "\n";
@@ -141,9 +149,9 @@ void handle_request(tcp::socket &socket) {
 
 	if (request.find("POST /search") != std::string::npos) {
 		std::cout << " Request Type POST " << "\n";
-		std::string const parsed_content (std::istreambuf_iterator<char>{request_stream}, {});
+		std::string const parsed_content(std::istreambuf_iterator<char>{request_stream}, {});
 		std::string user_words = parsed_content.substr(parsed_content.find("query") + 10);
-		user_words = user_words.substr(0,user_words.find("\r\n")+2);
+		user_words = user_words.substr(0, user_words.find("\r\n") + 2);
 		std::wstring str;
 		const char* c = user_words.c_str();
 		c = convert(c, "utf-8", "cp1251");//cp1251
@@ -182,11 +190,10 @@ void start_accept(boost::shared_ptr<tcp::socket> sock)
 	acc.async_accept(*sock, boost::bind(handle_accept, sock, std::placeholders::_1));
 }
 
-void start_http_server(std::string &dt) {
+void start_http_server(std::string& dt) {
 	con_data = dt;
 	socket_ptr sock(new tcp::socket(service));
 	start_accept(sock);
 	service.run();
 }
-
 
