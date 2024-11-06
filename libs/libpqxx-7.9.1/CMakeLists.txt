@@ -16,24 +16,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-option(BUILD_DOC "Build documentation" OFF)
-
-if(NOT SKIP_BUILD_TEST)
-    option(BUILD_TEST "Build all test cases" ON)
-endif()
-
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(config)
 
 add_subdirectory(src)
 add_subdirectory(include)
-if(BUILD_DOC)
-    add_subdirectory(doc)
-endif()
-if(BUILD_TEST)
-    add_subdirectory(test)
-endif()
 
 # installation
 write_basic_package_version_file(

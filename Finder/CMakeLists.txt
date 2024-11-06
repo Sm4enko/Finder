@@ -9,11 +9,11 @@ find_package(Boost REQUIRED COMPONENTS system locale thread)
 if(Boost_FOUND)
 	 message("${Boost_LIBRARY_DIRS} is found")
 endif()
-set(LIBCONV_LIBRARY "C:/SearchMachine/libs/libiconv/libiconvStatic.lib")
+set(LIBCONV_LIBRARY "C:/finder-main/libs/libiconv/libiconvStatic.lib")
 set(PostgreSQL_ADDITIONAL_VERSIONS "16")
 add_subdirectory("../${CMAKE_INCLUDE_CURRENT_DIR}/libs/libpqxx-7.9.1" libpqxx-build)
 
-add_executable(Finder main.cpp Table.cpp http_server.cpp)
+add_executable(Finder main.cpp http_server.cpp easylogging++.cc)
 
 target_compile_features(Finder PRIVATE cxx_std_20)
 target_link_libraries(Finder PRIVATE Boost::system Boost::locale Boost::thread ${LIBCONV_LIBRARY} pqxx)

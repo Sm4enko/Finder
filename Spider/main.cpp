@@ -1,4 +1,4 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -12,16 +12,22 @@
 #include <Windows.h>
 #include "Table.h"
 #include "Spider.h"
+#include <fcntl.h>
+#include <io.h>
+#include "easylogging++.h"
+INITIALIZE_EASYLOGGINGPP
 
-void main() {
-	std::string data;
-	setlocale(LC_ALL, "Russian_Russia.UTF-8");//setlocale(LC_ALL, "");ru_RU.UTF-8  Russian  Russian_Russia.1251 ru_RU.cp1251 Russian_Russia.866
-
-	/*boost::locale::generator gen;
-	std::locale loc = gen("Russian_Russia.1251");
-	std::locale::global(loc);*/
-	
-	std::unordered_map<std::string, std::string> settings = readConfig("C:/SearchMachine/config.ini");
+int main() {
+	std::string data = "";
+	setlocale(LC_ALL, "ru_RU.UTF-8");//setlocale(LC_ALL, "");ru_RU.UTF-8  Russian  Russian_Russia.1251 ru_RU.cp1251 Russian_Russia.866
+	std::unordered_map<std::string, std::string> settings;
+	try {
+		settings = readConfig("C:/Finder-main/config.ini");
+	}
+	catch (const std::exception& e) {
+		LOG(ERROR) << "РћС€РёР±РєР° РїСЂРё С‡С‚РµРЅРёРё РєРѕРЅС„РёРіСѓСЂР°С†РёРё: " << std::string(e.what());
+		return 1;
+	}
 	std::string host = settings["Host"];
 	int port = std::stoi(settings["Port"]);
 	std::string database = settings["Database"];
@@ -29,27 +35,24 @@ void main() {
 	std::string password = settings["Password"];
 	std::string startPage = settings["StartPage"];
 	int recursionDepth = std::stoi(settings["RecursionDepth"]);
-	
-	
-	std::cout << "Settings loaded successfully:" << std::endl;
-	std::cout << "Host: " << host << std::endl;
-	std::cout << "Port: " << port << std::endl;
-	std::cout << "Database: " << database << std::endl;
-	std::cout << "Username: " << username << std::endl;
-	std::cout << "StartPage: " << startPage << std::endl;
-	std::cout << "RecursionDepth: " << recursionDepth << std::endl;
-	std::wcout << L"Проверка локали: " << std::endl;
-	data += "dbname=" + database + " user=" + username + " password=" + password + " host=" + host + " port=" + std::to_string(port);
-	mySettings(data);
-	create_table();
 
+	LOG(INFO) << "Settings loaded successfully:";
+	LOG(INFO) << "Host: " << host.c_str();
+	LOG(INFO) << "Port: " << port;
+	LOG(INFO) << "Database: " << database.c_str();
+	LOG(INFO) << "Username: " << username.c_str();
+	LOG(INFO) << "StartPage: " << startPage.c_str();
+	LOG(INFO) << "RecursionDepth: " << recursionDepth;
+
+	std::string cs = "dbname=" + database + " user=" + username + " password=" + password + " host=" + host + " port=" + std::to_string(port);
 	Spider spider;
+	// initialize data for Spider instance
+	spider.connection_data = cs;
+	spider.task_list[startPage] = recursionDepth; // initialize task_list	
 
-	spider.guard.addThread(std::thread([&spider, &startPage, &recursionDepth, &data] {
-			spider.crawl_page(startPage, recursionDepth, data, 0); 
-		}),startPage);
-	spider.guard.runTask(spider.ids);
-	spider.guard.stop(); //  останавливаем функцию runTask
-	std::cout << "Склонирование дерева сайтов завершено" << std::endl;
-	exit(0);
+	create_table(spider.connection_data);
+	spider.worker();
+	LOG(INFO) << "";
+	LOG(INFO) << "Programm stop work";
+	return 0;
 }

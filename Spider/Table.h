@@ -6,9 +6,5 @@
 #include <unordered_map>
 
 std::unordered_map<std::string, std::string> readConfig(const std::string& filename);
-std::string getConnectionString();
-void create_table();
-void retrieve_data();
-void mySettings(const std::string mySettings);
-
+void create_table(std::string conn_data);
 #endif

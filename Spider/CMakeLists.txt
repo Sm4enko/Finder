@@ -3,6 +3,7 @@ project(Spider)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_LIBS ON)
 set(BOOST_ROOT "C:/boost")
+add_definitions(${LOGGING_CXX_FLAGS})
 
 find_package(Boost REQUIRED COMPONENTS system locale thread)
 if(Boost_FOUND)
@@ -18,7 +19,7 @@ set(PostgreSQL_ADDITIONAL_VERSIONS "16")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/libpqxx-7.9.1" libpqxx-build)
 
-add_executable(Spider main.cpp Spider.cpp Table.cpp )
+add_executable(Spider main.cpp Spider.cpp Table.cpp easylogging++.cc)
 
 target_compile_features(Spider PRIVATE cxx_std_20)
 target_link_libraries(Spider PRIVATE Boost::system Boost::locale Boost::thread ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} ${LIBCONV_LIBRARY} pqxx)
