@@ -52,6 +52,7 @@ void Spider::worker() {
 	query = "SELECT url FROM pages";
 	result = transaction.exec(query);
 	transaction.commit();
+	//добавим в уникальные адреса полученные из БД
 	for (int row_num = 0; row_num < result.size(); ++row_num) {
 		const auto row = result[row_num];
 		url_list[row[0].c_str()] = 0;
@@ -100,6 +101,7 @@ void Spider::worker() {
 				}
 
 				if (words_ocs.size() > 0) {
+					// пишем в таблицу адресов
 					query = "INSERT INTO pages (url) VALUES ('" + url + "') ON CONFLICT (url) DO NOTHING RETURNING id";
 					pqxx::work transaction(conn);
 					result = transaction.exec(query);
@@ -108,8 +110,9 @@ void Spider::worker() {
 						int page_id = result[0][0].as<int>();
 						for (auto w{ words_ocs.begin() }; w != words_ocs.end(); w++) {
 							std::string word = w->first;
+							// проверяем есть ли слово в БД, запросим ид
 							query = "SELECT id FROM words WHERE word = '" + word + "'";
-							try {	// пишем в таблицу адресов
+							try {	
 								pqxx::work transaction(conn);
 								result = transaction.exec(query);
 								transaction.commit();
@@ -119,22 +122,23 @@ void Spider::worker() {
 								out_str += e.what();
 								printMsg(out_str, 1);
 							}
-							if (!result.empty()) { continue; }
-							query = "INSERT INTO words (word) VALUES ('" + word + "') RETURNING id";
-							try {	// пишем в таблицу слов
-								pqxx::work transaction(conn);
-								result = transaction.exec(query);
-								transaction.commit();
+							// если нет, то добавим, получим ид
+							if (result.empty()) { 
+								query = "INSERT INTO words (word) VALUES ('" + word + "') RETURNING id";
+								try {	// пишем в таблицу слов
+									pqxx::work transaction(conn);
+									result = transaction.exec(query);
+									transaction.commit();
+								}
+								catch (pqxx::sql_error const& e) {
+									out_str = "DB Error \n";
+									out_str += e.what();
+									printMsg(out_str, 1);
+								}
+								catch (...) {
+									printMsg("Unknown DB Error", 1);
+								}
 							}
-							catch (pqxx::sql_error const& e) {
-								out_str = "DB Error \n";
-								out_str += e.what();
-								printMsg(out_str, 1);
-							}
-							catch (...) {
-								printMsg("Unknown DB Error", 1);
-							}
-
 							int word_id = result[0][0].as<int>();
 							int freq = w->second;
 							query = "INSERT INTO word_occurrences (word_id, page_id, frequency) VALUES ($1 ,$2, $3)";
@@ -315,9 +319,7 @@ void Spider::crawl(const std::string url, int depth) { //, std::string data, boo
 
 		while (ss >> word) {
 			std::wstring ws = converter.from_bytes(word);
-			if (ws.size() > 2) {// <3 symbols size restrict
-				++wordFrequency[word];
-			}
+			++wordFrequency[word];
 		}
 		{ // пространство mutex lock_sites
 			std::lock_guard<std::mutex> lock_sites(mutex_sites);
@@ -370,7 +372,7 @@ void Spider::crawl(const std::string url, int depth) { //, std::string data, boo
 			}
 		}
 		io_context.run();
-		out_str = " Stop normally (depth > 1 ) ,new url's added, thread# " + threadId + " in url " + url;
+		out_str = " Stop normally (depth > 1 ), new url's added, thread# " + threadId + " in url " + url;
 		pre_end_thread(out_str, threadIdNum, 0);
 	}
 	catch (const std::exception& e) {
@@ -392,8 +394,6 @@ std::string Spider::html_parser(const std::string& input) {
 	boost::regex tags("<[^<>]+>");// "(<[^>]*)>" "<[^>]+>"
 	boost::regex head("(<head.*?</head>)");
 	boost::regex scripts("(<script.*?</script>)");
-	boost::regex spec("[\".,'^$%:\?!\{\}*\(<+\-=>#&@\)]");
-	boost::regex space_s("[\\r\\n\\t\\v\\f]");
 	boost::regex space("( +)");
 	boost::regex nbsp("(\&nbsp;)");
 
@@ -402,13 +402,11 @@ std::string Spider::html_parser(const std::string& input) {
 	output = boost::regex_replace(output, styles, " ");
 	output = boost::regex_replace(output, tags, " ");
 	output = boost::regex_replace(output, nbsp, " ");
-	output = boost::regex_replace(output, spec, " ");
-	output = boost::regex_replace(output, space_s, "");
 	output = boost::regex_replace(output, space, " ");
 	std::wstring wstr2 = L"";
 	std::wstring wstr = converter.from_bytes(output);
-	for (auto c : wstr) {
-		bool condition = (c > 1039 && c < 1104) || (c > 64 && c < 91) || (c > 96 && c < 123) || (c == 1105) || (c == 32) || (c > 47 && c < 58);
+	for (auto c : wstr) {// кирилица В.,н.регистр	латиница В.регистр	  латиница н.регистр		ё				Ё			пробел			цифры
+		bool condition = (c > 1039 && c < 1104) || (c > 64 && c < 91) || (c > 96 && c < 123) || (c == 1105) || (c == 1105) || (c == 32) || (c > 47 && c < 58);
 		if (condition) {
 			if ((c > 1039 && c < 1072) || (c > 64 && c < 91)) { // LOWERCASE
 				c += 32;

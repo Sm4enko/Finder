@@ -15,7 +15,7 @@ INITIALIZE_EASYLOGGINGPP
 
 std::unordered_map<std::string, std::string> sets;
 std::string data = "";
-void run_server() {
+static void run_server() {
 	start_http_server(data);
 }
 

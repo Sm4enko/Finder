@@ -12,6 +12,7 @@
 #include <include/iconv.h>
 #include <boost/regex.hpp>
 #include "easylogging++.h"
+#include<codecvt>
 
 using boost::asio::ip::tcp;
 using namespace std::this_thread; // sleep_for, sleep_until
@@ -52,19 +53,26 @@ std::unordered_map<std::string, std::string > readConfig(const std::string& file
 static std::vector<std::string> parse_search_query(std::string& query) {
 	size_t start;
 	size_t end = 0;
-	std::string words = "";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::vector<std::string> searchWords;
-	boost::regex spec("[!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]"); // удалим из запроса символы, которых точно нет в базе
-	query = boost::regex_replace(query, spec, "");
-	for (auto& c : query) {
-		if (c != 10 && c != 13) {
-			words += c;
+	boost::regex spec("( +)"); // удалим из запроса символы, которых точно нет в базе
+	query = boost::regex_replace(query, spec, " ");
+	std::wstring wstr2 = L"";
+	std::wstring wstr = converter.from_bytes(query);
+	for (auto c : wstr) {// кирилица В.,н.регистр	латиница В.регистр	  латиница н.регистр		ё				Ё			пробел			цифры
+		bool condition = (c > 1039 && c < 1104) || (c > 64 && c < 91) || (c > 96 && c < 123) || (c == 1105) || (c == 1105) || (c == 32) || (c > 47 && c < 58);
+		if (condition) {
+			if ((c > 1039 && c < 1072) || (c > 64 && c < 91)) { // LOWERCASE
+				c += 32;
+			}
+			wstr2 += c;
 		}
 	}
-	while ((start = words.find_first_not_of(" ", end)) != std::string::npos)
+	query = converter.to_bytes(wstr2);
+	while ((start = query.find_first_not_of(" ", end)) != std::string::npos)
 	{
-		end = words.find(" ", start);
-		searchWords.push_back(words.substr(start, end - start));
+		end = query.find(" ", start);
+		searchWords.push_back(query.substr(start, end - start));
 	}
 	return searchWords;
 }

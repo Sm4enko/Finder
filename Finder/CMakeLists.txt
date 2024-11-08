@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Finder)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_LIBS ON)
-set(BOOST_ROOT "C:/boost")
+set(BOOST_ROOT "C:/finder-main/boost_1_85_0")
 
 
 find_package(Boost REQUIRED COMPONENTS system locale thread)
